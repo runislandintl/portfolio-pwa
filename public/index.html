@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Portfolio">
+  <meta name="theme-color" content="#070b12">
+  <title>Portfolio</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #070b12;
+      --surface:  #0e1521;
+      --surface2: #121d2e;
+      --border:   #1a2535;
+      --gold:     #e8b94a;
+      --green:    #3ddc84;
+      --red:      #ff5f5f;
+      --text:     #e8edf5;
+      --muted:    #4a5a72;
+      --font-ui:  'Syne', sans-serif;
+      --font-num: 'JetBrains Mono', monospace;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body {
+      padding-top: var(--safe-top);
+      padding-bottom: calc(var(--safe-bot) + 16px);
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(7, 11, 18, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px 12px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .app-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .status-dot.live  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.error { background: var(--red); }
+
+    .btn-bell {
+      background: none; border: none; cursor: pointer;
+      font-size: 16px; padding: 2px; line-height: 1;
+      opacity: 0.5; transition: opacity 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-bell.active { opacity: 1; }
+    .btn-bell:active { transform: scale(0.9); }
+
+    .total-value {
+      font-family: var(--font-num);
+      font-size: 36px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .total-pnl {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .pnl-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-num);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .pnl-badge.pos { background: rgba(61,220,132,0.12); color: var(--green); }
+    .pnl-badge.neg { background: rgba(255,95,95,0.12);  color: var(--red); }
+    .pnl-badge.neu { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+    .pnl-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-num);
+      align-self: center;
+      margin-left: 2px;
+    }
+
+    .refresh-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-num);
+    }
+
+    /* ── MAIN ── */
+    main { padding: 14px 20px; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .btn-text {
+      background: none; border: none;
+      color: var(--muted); font-family: var(--font-ui);
+      font-size: 11px; cursor: pointer;
+      padding: 4px 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-text:active { color: var(--gold); }
+
+    /* ── POSITIONS ── */
+    .positions { display: flex; flex-direction: column; gap: 2px; }
+
+    .position-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 13px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .pos-left  { display: flex; flex-direction: column; gap: 3px; }
+    .pos-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+
+    .pos-symbol {
+      font-family: var(--font-num);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .pos-detail {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--font-num);
+    }
+
+    .pos-value {
+      font-family: var(--font-num);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .pos-pnl {
+      font-family: var(--font-num);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .pos-pnl.pos { color: var(--green); }
+    .pos-pnl.neg { color: var(--red); }
+    .pos-pnl.neu { color: var(--muted); }
+
+    /* ── PUSH BANNER ── */
+    .push-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .push-banner-icon { font-size: 22px; flex-shrink: 0; line-height: 1.2; }
+
+    .push-banner-text { flex: 1; }
+
+    .push-banner-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .push-banner-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .push-banner-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #0a0a0a;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:active { opacity: 0.8; }
+
+    .btn-secondary {
+      background: none;
+      color: var(--muted);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── IMPORT SCREEN ── */
+    #import-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 85vh;
+      text-align: center;
+      padding: 40px 24px;
+      gap: 20px;
+    }
+
+    .import-icon { font-size: 52px; line-height: 1; }
+
+    .import-title {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .import-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 300px;
+    }
+
+    .import-steps {
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .import-steps ol {
+      list-style: none;
+      counter-reset: steps;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .import-steps li {
+      counter-increment: steps;
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .import-steps li::before {
+      content: counter(steps);
+      min-width: 22px; height: 22px;
+      background: var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-num);
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .import-steps strong { color: var(--text); }
+
+    .btn-import {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold);
+      color: #0a0a0a;
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 700;
+      padding: 15px 32px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-import:active { opacity: 0.8; }
+
+    #csv-input { display: none; }
+  </style>
+</head>
+<body>
+
+<input type="file" id="csv-input" accept=".csv">
+
+<!-- ── Import screen ── -->
+<div id="import-screen">
+  <div class="import-icon">📊</div>
+  <div class="import-title">Portfolio Tracker</div>
+  <div class="import-desc">Importe ton export Yahoo Finance pour suivre tes positions en temps réel.</div>
+
+  <div class="import-steps">
+    <ol>
+      <li>Va sur <strong>finance.yahoo.com</strong> → ton portefeuille</li>
+      <li>Clique <strong>⋮ → Télécharger (Download)</strong></li>
+      <li>Importe le fichier CSV ci-dessous</li>
+    </ol>
+  </div>
+
+  <button class="btn-import" onclick="document.getElementById('csv-input').click()">
+    ↑ Importer le CSV
+  </button>
+</div>
+
+<!-- ── Portfolio screen ── -->
+<div id="portfolio-screen" style="display:none">
+  <header>
+    <div class="header-top">
+      <span class="app-title">Portfolio</span>
+      <div class="header-actions">
+        <button class="btn-bell" id="btn-bell" title="Notifications 14h30 NY" onclick="togglePush()">🔔</button>
+        <span class="status-dot" id="status-dot"></span>
+      </div>
+    </div>
+    <div class="total-value" id="total-value">—</div>
+    <div class="total-pnl" id="total-pnl"></div>
+    <div class="refresh-info">
+      <span id="last-updated">chargement…</span>
+      <span>·</span>
+      <span id="countdown">—</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Push notification banner (shown once) -->
+    <div class="push-banner" id="push-banner" style="display:none">
+      <div class="push-banner-icon">🔔</div>
+      <div class="push-banner-text">
+        <div class="push-banner-title">Notif quotidienne à 14h30 NY</div>
+        <div class="push-banner-desc">Reçois la valeur de ton portefeuille chaque jour à l'ouverture de NYSE + 5h.</div>
+        <div class="push-banner-actions">
+          <button class="btn-primary" onclick="enablePush()">Activer</button>
+          <button class="btn-secondary" onclick="dismissPushBanner()">Plus tard</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="section-label">Positions</div>
+      <button class="btn-text" onclick="showImportMenu()">⋮ Options</button>
+    </div>
+
+    <div class="positions" id="positions-list"></div>
+  </main>
+</div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const POLL_INTERVAL = 60;
+const STORAGE_KEY   = 'portfolio_holdings_v1';
+const PUSH_DISMISSED_KEY = 'push_banner_dismissed';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let holdings = [];
+let quotes   = {};
+let countdown = POLL_INTERVAL;
+let pollTimer = null;
+let countdownTimer = null;
+let pushEnabled = false;
+
+// ── CSV PARSING ────────────────────────────────────────────────────────────
+function parseCSVRow(line) {
+  const result = []; let cur = ''; let inQ = false;
+  for (const c of line) {
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
+
+  const col = (...names) => {
+    for (const n of names) {
+      const i = headers.findIndex(h => h.includes(n));
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
+
+  const iSym  = col('symbol', 'ticker');
+  const iQty  = col('quantity', 'shares', 'qty');
+  const iCost = col('purchase price', 'avg cost', 'cost basis', 'average cost');
+
+  if (iSym < 0) return null;
+
+  return lines.slice(1).flatMap(line => {
+    const row = parseCSVRow(line);
+    const sym = (row[iSym] || '').trim().toUpperCase();
+    if (!sym || sym === 'SYMBOL') return [];
+    const qty = iQty >= 0 ? parseFloat((row[iQty] || '').replace(/,/g, '')) : 0;
+    const cost = iCost >= 0 ? parseFloat((row[iCost] || '').replace(/[,$]/g, '')) : 0;
+    if (!sym || isNaN(qty) || qty <= 0) return [];
+    return [{ symbol: sym, qty, avgCost: isNaN(cost) ? 0 : cost }];
+  });
+}
+
+// ── FILE IMPORT ────────────────────────────────────────────────────────────
+document.getElementById('csv-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const parsed = parseCSV(text);
+  if (!parsed || parsed.length === 0) {
+    alert('Impossible de lire ce CSV. Vérifie le format Yahoo Finance.');
+    return;
+  }
+  holdings = parsed;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
+  startPortfolio();
+});
+
+// ── QUOTES ────────────────────────────────────────────────────────────────
+async function fetchQuotes() {
+  if (!holdings.length) return;
+  const dot = document.getElementById('status-dot');
+  const symbols = holdings.map(h => h.symbol).join(',');
+  try {
+    const res = await fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    (data?.quoteResponse?.result ?? []).forEach(q => {
+      quotes[q.symbol] = {
+        price:     q.regularMarketPrice,
+        change:    q.regularMarketChange,
+        changePct: q.regularMarketChangePercent,
+        prevClose: q.regularMarketPreviousClose,
+        name:      q.shortName || q.symbol,
+        currency:  q.currency || 'USD',
+      };
+    });
+    dot.className = 'status-dot live';
+    renderPortfolio();
+    updateLastUpdated();
+    countdown = POLL_INTERVAL;
+  } catch (err) {
+    dot.className = 'status-dot error';
+    console.error('Quote fetch error:', err);
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+const fmtNum = (n, d = 2) =>
+  isNaN(n) || n == null ? '—' : n.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+const fmtCur = (n, cur = 'USD') =>
+  isNaN(n) || n == null ? '—' : n.toLocaleString('fr-FR', { style: 'currency', currency: cur, maximumFractionDigits: 2 });
+
+const sign = n => n >= 0 ? '+' : '';
+const cls  = n => n > 0 ? 'pos' : n < 0 ? 'neg' : 'neu';
+
+function renderPortfolio() {
+  let totalValue = 0, totalCost = 0, totalDay = 0;
+
+  const rows = holdings.map(h => {
+    const q        = quotes[h.symbol];
+    const price    = q?.price ?? 0;
+    const value    = price * h.qty;
+    const cost     = (h.avgCost || 0) * h.qty;
+    const pnl      = cost > 0 ? value - cost : null;
+    const pnlPct   = cost > 0 ? (pnl / cost) * 100 : null;
+    const dayChg   = (q?.change ?? 0) * h.qty;
+    totalValue += value; totalCost += cost; totalDay += dayChg;
+    return { h, q, price, value, cost, pnl, pnlPct, dayChg };
+  }).sort((a, b) => b.value - a.value);
+
+  const totalPnl    = totalCost > 0 ? totalValue - totalCost : null;
+  const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : null;
+
+  // Header value
+  document.getElementById('total-value').textContent =
+    totalValue > 0 ? fmtCur(totalValue) : '—';
+
+  // Header badges
+  const pnlEl = document.getElementById('total-pnl');
+  pnlEl.innerHTML = '';
+
+  if (totalPnl !== null) {
+    pnlEl.innerHTML += `<span class="pnl-badge ${cls(totalPnl)}">${sign(totalPnl)}${fmtCur(totalPnl)} (${sign(totalPnlPct)}${fmtNum(totalPnlPct)}%)</span><span class="pnl-label">total</span>`;
+  }
+  if (totalDay !== 0) {
+    pnlEl.innerHTML += `<span class="pnl-badge ${cls(totalDay)}">${sign(totalDay)}${fmtCur(totalDay)}</span><span class="pnl-label">auj.</span>`;
+  }
+
+  // Positions
+  const list = document.getElementById('positions-list');
+  list.innerHTML = '';
+
+  rows.forEach(({ h, q, price, value, pnl, pnlPct, dayChg }) => {
+    const hasCost  = h.avgCost > 0 && pnl !== null;
+    const pnlStr   = hasCost
+      ? `${sign(pnl)}${fmtCur(pnl)} (${sign(pnlPct)}${fmtNum(pnlPct)}%)`
+      : `${sign(dayChg)}${fmtCur(dayChg)} auj.`;
+    const pnlCls   = hasCost ? cls(pnl) : cls(dayChg);
+    const qtyStr   = fmtNum(h.qty, h.qty % 1 === 0 ? 0 : 4);
+    const costStr  = h.avgCost > 0 ? ` · ${fmtCur(h.avgCost)} moy.` : '';
+
+    const row = document.createElement('div');
+    row.className = 'position-row';
+    row.innerHTML = `
+      <div class="pos-left">
+        <div class="pos-symbol">${h.symbol}</div>
+        <div class="pos-detail">${qtyStr} action${h.qty > 1 ? 's' : ''}${costStr}</div>
+      </div>
+      <div class="pos-right">
+        <div class="pos-value">${price > 0 ? fmtCur(value) : '—'}</div>
+        <div class="pos-pnl ${pnlCls}">${price > 0 ? pnlStr : 'chargement…'}</div>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function updateLastUpdated() {
+  document.getElementById('last-updated').textContent =
+    `Mis à jour ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+}
+
+// ── COUNTDOWN ─────────────────────────────────────────────────────────────
+function startCountdown() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    countdown = Math.max(0, countdown - 1);
+    document.getElementById('countdown').textContent =
+      countdown === 0 ? 'actualisation…' : `prochaine dans ${countdown}s`;
+  }, 1000);
+}
+
+// ── POLLING ───────────────────────────────────────────────────────────────
+function startPolling() {
+  fetchQuotes();
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(() => { countdown = POLL_INTERVAL; fetchQuotes(); }, POLL_INTERVAL * 1000);
+}
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeToPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Les notifications push ne sont pas supportées sur ce navigateur.\n\niOS : installe l\'app via Safari → "Sur l\'écran d\'accueil"');
+    return false;
+  }
+
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') return false;
+
+  const reg = await navigator.serviceWorker.ready;
+  const { key } = await (await fetch('/api/vapid-public-key')).json();
+
+  const subscription = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(key),
+  });
+
+  await fetch('/api/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subscription, holdings }),
+  });
+
+  return true;
+}
+
+async function unsubscribeFromPush() {
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if (sub) {
+    await fetch('/api/unsubscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: sub.endpoint }),
+    });
+    await sub.unsubscribe();
+  }
+}
+
+async function enablePush() {
+  const ok = await subscribeToPush();
+  if (ok) {
+    pushEnabled = true;
+    updateBellUI();
+    dismissPushBanner();
+    showToast('🔔 Notifs activées — 14h30 NY chaque jour ouvré');
+  }
+}
+
+async function togglePush() {
+  if (pushEnabled) {
+    await unsubscribeFromPush();
+    pushEnabled = false;
+    updateBellUI();
+    showToast('Notifications désactivées');
+  } else {
+    await enablePush();
+  }
+}
+
+function updateBellUI() {
+  document.getElementById('btn-bell').classList.toggle('active', pushEnabled);
+}
+
+async function checkPushStatus() {
+  if (!('PushManager' in window)) return;
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  pushEnabled = !!sub;
+  updateBellUI();
+
+  // Show banner once if not dismissed and not already subscribed
+  if (!pushEnabled && !localStorage.getItem(PUSH_DISMISSED_KEY)) {
+    setTimeout(() => {
+      document.getElementById('push-banner').style.display = 'flex';
+    }, 2000);
+  }
+}
+
+function dismissPushBanner() {
+  document.getElementById('push-banner').style.display = 'none';
+  localStorage.setItem(PUSH_DISMISSED_KEY, '1');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = Object.assign(document.createElement('div'), {
+    textContent: msg,
+    style: `position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#1a2535;color:#e8edf5;padding:10px 18px;border-radius:20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;z-index:999;pointer-events:none;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,0.4);`,
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ── OPTIONS MENU ──────────────────────────────────────────────────────────
+function showImportMenu() {
+  const choice = confirm('Réinitialiser et importer un nouveau CSV ?');
+  if (choice) resetPortfolio();
+}
+
+function resetPortfolio() {
+  clearInterval(pollTimer);
+  clearInterval(countdownTimer);
+  holdings = []; quotes = {};
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('portfolio-screen').style.display = 'none';
+  document.getElementById('import-screen').style.display = 'flex';
+  document.getElementById('csv-input').value = '';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+function startPortfolio() {
+  document.getElementById('import-screen').style.display = 'none';
+  document.getElementById('portfolio-screen').style.display = 'block';
+  startPolling();
+  startCountdown();
+  checkPushStatus();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  }
+
+  // Restore holdings from localStorage
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      holdings = JSON.parse(saved);
+      if (holdings.length) { startPortfolio(); return; }
+    }
+  } catch {}
+
+  document.getElementById('import-screen').style.display = 'flex';
+});
+</script>
+</body>
+</html>
