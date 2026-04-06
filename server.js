@@ -6,6 +6,11 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── VAPID ──────────────────────────────────────────────────────────────────
