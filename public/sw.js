@@ -1,68 +1,35 @@
-// v4 — network-first pour tout (évite que iOS serve l'ancien HTML)
-const CACHE = 'portfolio-v4';
-const STATIC = ['/icon.svg', '/manifest.json'];
+// v5 — NO CACHE. Réseau pur. Push only.
+const CACHE_NAME = 'portfolio-v5';
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
-  self.skipWaiting();
-});
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', e => {
+  // Supprime tous les anciens caches
   e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
       .then(() => clients.claim())
   );
 });
 
+// Tout passe par le réseau — aucun cache
 self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-
-  // API : toujours réseau
-  if (url.pathname.startsWith('/api/')) {
-    e.respondWith(fetch(e.request));
-    return;
-  }
-
-  // HTML (index, /) : réseau d'abord, cache en fallback
-  if (url.pathname === '/' || url.pathname.endsWith('.html')) {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
-    return;
-  }
-
-  // Statiques (icon, manifest) : cache d'abord
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
-  );
+  if (e.request.method !== 'GET') return;
+  e.respondWith(fetch(e.request));
 });
 
 // ── Push ──────────────────────────────────────────────────────────────────
 self.addEventListener('push', e => {
-  let data = { title: '📊 Portfolio', body: 'Valeur mise à jour' };
+  let data = { title: '📊 Portfolio', body: '—' };
   try { data = JSON.parse(e.data.text()); } catch {}
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body, icon: '/icon.svg', badge: '/icon.svg',
-      tag: 'portfolio-alert', renotify: true, data: { url: '/' },
+      tag: 'portfolio-alert', renotify: true,
     })
   );
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
-      const c = cs.find(w => w.url === self.location.origin + '/');
-      if (c) return c.focus();
-      return clients.openWindow('/');
-    })
-  );
+  e.waitUntil(clients.openWindow('/'));
 });
