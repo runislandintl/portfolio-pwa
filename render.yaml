@@ -1,12 +1,14 @@
 services:
   - type: web
     name: portfolio-pwa
-    runtime: node
+    env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node server.js
     plan: free
     envVars:
       - key: VAPID_PUBLIC_KEY
         sync: false
       - key: VAPID_PRIVATE_KEY
         sync: false
+      - key: NODE_VERSION
+        value: "20"
