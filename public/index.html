@@ -11,9 +11,9 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --bg:       #070b12;
       --surface:  #0e1521;
@@ -29,338 +29,127 @@
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bot: env(safe-area-inset-bottom, 0px);
     }
-
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-ui);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    body {
-      padding-top: var(--safe-top);
-      padding-bottom: calc(var(--safe-bot) + 16px);
-    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-ui); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    body { padding-top: var(--safe-top); padding-bottom: calc(var(--safe-bot) + 16px); }
 
     /* ── HEADER ── */
     header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(7, 11, 18, 0.94);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(7,11,18,0.94);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
       padding: 14px 20px 12px;
     }
-
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-
-    .app-title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-    }
-
+    .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .app-title { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
     .header-actions { display: flex; align-items: center; gap: 10px; }
-
-    .status-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--muted);
-      transition: background 0.3s, box-shadow 0.3s;
-    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s, box-shadow 0.3s; }
     .status-dot.live  { background: var(--green); box-shadow: 0 0 6px var(--green); }
     .status-dot.error { background: var(--red); }
-
-    .btn-bell {
-      background: none; border: none; cursor: pointer;
-      font-size: 16px; padding: 2px; line-height: 1;
-      opacity: 0.5; transition: opacity 0.2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-bell.active { opacity: 1; }
-    .btn-bell:active { transform: scale(0.9); }
-
-    .total-value {
-      font-family: var(--font-num);
-      font-size: 36px;
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-    }
-
-    .total-pnl {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 5px;
-    }
-
-    .pnl-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-family: var(--font-num);
-      font-size: 12px;
-      font-weight: 600;
-    }
+    .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px; line-height: 1; opacity: 0.5; transition: opacity 0.2s; -webkit-tap-highlight-color: transparent; }
+    .btn-icon.active { opacity: 1; }
+    .btn-icon:active { transform: scale(0.9); }
+    .btn-icon.spinning { animation: spin 0.8s linear infinite; opacity: 1; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .total-value { font-family: var(--font-num); font-size: 36px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+    .total-pnl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+    .pnl-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-family: var(--font-num); font-size: 12px; font-weight: 600; }
     .pnl-badge.pos { background: rgba(61,220,132,0.12); color: var(--green); }
     .pnl-badge.neg { background: rgba(255,95,95,0.12);  color: var(--red); }
     .pnl-badge.neu { background: rgba(255,255,255,0.05); color: var(--muted); }
-
-    .pnl-label {
-      font-size: 10px;
-      color: var(--muted);
-      font-family: var(--font-num);
-      align-self: center;
-      margin-left: 2px;
-    }
-
-    .refresh-info {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 6px;
-      font-size: 10px;
-      color: var(--muted);
-      font-family: var(--font-num);
-    }
+    .pnl-label { font-size: 10px; color: var(--muted); font-family: var(--font-num); align-self: center; margin-left: 2px; }
+    .refresh-info { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 10px; color: var(--muted); font-family: var(--font-num); }
 
     /* ── MAIN ── */
-    main { padding: 14px 20px; }
+    main { padding: 14px 20px; display: flex; flex-direction: column; gap: 20px; }
 
-    /* ── TOOLBAR ── */
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .section-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .btn-text {
-      background: none; border: none;
-      color: var(--muted); font-family: var(--font-ui);
-      font-size: 11px; cursor: pointer;
-      padding: 4px 0;
-      -webkit-tap-highlight-color: transparent;
-    }
+    /* ── SECTION ── */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .btn-text { background: none; border: none; color: var(--muted); font-family: var(--font-ui); font-size: 11px; cursor: pointer; padding: 4px 0; -webkit-tap-highlight-color: transparent; }
     .btn-text:active { color: var(--gold); }
 
     /* ── POSITIONS ── */
     .positions { display: flex; flex-direction: column; gap: 2px; }
-
-    .position-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      padding: 13px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-
+    .position-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 13px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
     .pos-left  { display: flex; flex-direction: column; gap: 3px; }
     .pos-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+    .pos-symbol { font-family: var(--font-num); font-size: 15px; font-weight: 600; letter-spacing: 0.04em; }
+    .pos-detail { font-size: 11px; color: var(--muted); font-family: var(--font-num); }
+    .pos-value  { font-family: var(--font-num); font-size: 15px; font-weight: 600; }
+    .pos-pnl    { font-family: var(--font-num); font-size: 11px; font-weight: 600; }
+    .pos-pnl.pos { color: var(--green); } .pos-pnl.neg { color: var(--red); } .pos-pnl.neu { color: var(--muted); }
 
-    .pos-symbol {
-      font-family: var(--font-num);
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-    }
+    /* ── CHART ── */
+    .chart-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .chart-loading { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; font-family: var(--font-num); }
+    .chart-canvas-wrap { position: relative; height: 200px; }
 
-    .pos-detail {
-      font-size: 11px;
-      color: var(--muted);
-      font-family: var(--font-num);
+    /* ── ALERTS ── */
+    .alerts-list { display: flex; flex-direction: column; gap: 6px; }
+    .alert-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
     }
+    .alert-row.triggered { opacity: 0.4; }
+    .alert-info { display: flex; flex-direction: column; gap: 2px; }
+    .alert-title { font-family: var(--font-num); font-size: 13px; font-weight: 600; }
+    .alert-sub { font-size: 11px; color: var(--muted); font-family: var(--font-num); }
+    .btn-del { background: none; border: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 4px; -webkit-tap-highlight-color: transparent; }
+    .btn-del:active { color: var(--red); }
 
-    .pos-value {
-      font-family: var(--font-num);
-      font-size: 15px;
-      font-weight: 600;
+    /* ── ADD ALERT FORM ── */
+    .alert-form {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
     }
-
-    .pos-pnl {
-      font-family: var(--font-num);
-      font-size: 11px;
-      font-weight: 600;
+    .form-row { display: flex; gap: 8px; }
+    .form-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .form-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .form-select, .form-input {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-num); font-size: 13px;
+      padding: 8px 10px; width: 100%;
+      -webkit-appearance: none; appearance: none;
     }
-    .pos-pnl.pos { color: var(--green); }
-    .pos-pnl.neg { color: var(--red); }
-    .pos-pnl.neu { color: var(--muted); }
+    .form-select:focus, .form-input:focus { outline: none; border-color: var(--gold); }
+    .btn-add-alert {
+      background: var(--gold); color: #0a0a0a; font-family: var(--font-ui);
+      font-size: 13px; font-weight: 700; padding: 10px; border-radius: 8px;
+      border: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-add-alert:active { opacity: 0.8; }
 
     /* ── PUSH BANNER ── */
-    .push-banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-    }
-
+    .push-banner { display: flex; align-items: flex-start; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
     .push-banner-icon { font-size: 22px; flex-shrink: 0; line-height: 1.2; }
-
     .push-banner-text { flex: 1; }
-
-    .push-banner-title {
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .push-banner-desc {
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .push-banner-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .btn-primary {
-      background: var(--gold);
-      color: #0a0a0a;
-      font-family: var(--font-ui);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 6px 14px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .push-banner-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .push-banner-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .push-banner-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-primary { background: var(--gold); color: #0a0a0a; font-family: var(--font-ui); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .btn-primary:active { opacity: 0.8; }
-
-    .btn-secondary {
-      background: none;
-      color: var(--muted);
-      font-family: var(--font-ui);
-      font-size: 12px;
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .btn-secondary { background: none; color: var(--muted); font-family: var(--font-ui); font-size: 12px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
     /* ── IMPORT SCREEN ── */
-    #import-screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 85vh;
-      text-align: center;
-      padding: 40px 24px;
-      gap: 20px;
-    }
-
+    #import-screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; padding: 40px 24px; gap: 20px; }
     .import-icon { font-size: 52px; line-height: 1; }
-
-    .import-title {
-      font-size: 24px;
-      font-weight: 800;
-    }
-
-    .import-desc {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.6;
-      max-width: 300px;
-    }
-
-    .import-steps {
-      text-align: left;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 20px;
-      width: 100%;
-      max-width: 340px;
-    }
-
-    .import-steps ol {
-      list-style: none;
-      counter-reset: steps;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .import-steps li {
-      counter-increment: steps;
-      display: flex;
-      gap: 12px;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .import-steps li::before {
-      content: counter(steps);
-      min-width: 22px; height: 22px;
-      background: var(--border);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      font-family: var(--font-num);
-      color: var(--gold);
-      flex-shrink: 0;
-    }
-
+    .import-title { font-size: 24px; font-weight: 800; }
+    .import-desc { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 300px; }
+    .import-steps { text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 340px; }
+    .import-steps ol { list-style: none; counter-reset: steps; display: flex; flex-direction: column; gap: 10px; }
+    .import-steps li { counter-increment: steps; display: flex; gap: 12px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .import-steps li::before { content: counter(steps); min-width: 22px; height: 22px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-num); color: var(--gold); flex-shrink: 0; }
     .import-steps strong { color: var(--text); }
-
-    .btn-import {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--gold);
-      color: #0a0a0a;
-      font-family: var(--font-ui);
-      font-size: 15px;
-      font-weight: 700;
-      padding: 15px 32px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .btn-import { display: inline-flex; align-items: center; gap: 8px; background: var(--gold); color: #0a0a0a; font-family: var(--font-ui); font-size: 15px; font-weight: 700; padding: 15px 32px; border-radius: 12px; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .btn-import:active { opacity: 0.8; }
-
     #csv-input { display: none; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #1a2535; color: var(--text); padding: 10px 18px; border-radius: 20px; font-family: var(--font-ui); font-size: 13px; font-weight: 600; z-index: 999; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
   </style>
 </head>
 <body>
-
 <input type="file" id="csv-input" accept=".csv">
 
 <!-- ── Import screen ── -->
@@ -368,7 +157,6 @@
   <div class="import-icon">📊</div>
   <div class="import-title">Portfolio Tracker</div>
   <div class="import-desc">Importe ton export Yahoo Finance pour suivre tes positions en temps réel.</div>
-
   <div class="import-steps">
     <ol>
       <li>Va sur <strong>finance.yahoo.com</strong> → ton portefeuille</li>
@@ -376,10 +164,7 @@
       <li>Importe le fichier CSV ci-dessous</li>
     </ol>
   </div>
-
-  <button class="btn-import" onclick="document.getElementById('csv-input').click()">
-    ↑ Importer le CSV
-  </button>
+  <button class="btn-import" onclick="document.getElementById('csv-input').click()">↑ Importer le CSV</button>
 </div>
 
 <!-- ── Portfolio screen ── -->
@@ -388,7 +173,8 @@
     <div class="header-top">
       <span class="app-title">Portfolio</span>
       <div class="header-actions">
-        <button class="btn-bell" id="btn-bell" title="Notifications 14h30 NY" onclick="togglePush()">🔔</button>
+        <button class="btn-icon" id="btn-refresh" title="Actualiser" onclick="manualRefresh()">↻</button>
+        <button class="btn-icon" id="btn-bell" title="Notifications" onclick="togglePush()">🔔</button>
         <span class="status-dot" id="status-dot"></span>
       </div>
     </div>
@@ -402,12 +188,12 @@
   </header>
 
   <main>
-    <!-- Push notification banner (shown once) -->
+    <!-- Push banner -->
     <div class="push-banner" id="push-banner" style="display:none">
       <div class="push-banner-icon">🔔</div>
       <div class="push-banner-text">
-        <div class="push-banner-title">Notif quotidienne à 14h30 NY</div>
-        <div class="push-banner-desc">Reçois la valeur de ton portefeuille chaque jour à l'ouverture de NYSE + 5h.</div>
+        <div class="push-banner-title">Push horaire pendant les heures NYSE</div>
+        <div class="push-banner-desc">Valeur du portfolio toutes les heures · 9h30→16h NY · Alertes prix en temps réel.</div>
         <div class="push-banner-actions">
           <button class="btn-primary" onclick="enablePush()">Activer</button>
           <button class="btn-secondary" onclick="dismissPushBanner()">Plus tard</button>
@@ -415,12 +201,60 @@
       </div>
     </div>
 
-    <div class="toolbar">
-      <div class="section-label">Positions</div>
-      <button class="btn-text" onclick="showImportMenu()">⋮ Options</button>
+    <!-- Positions -->
+    <div>
+      <div class="section-header">
+        <div class="section-label">Positions</div>
+        <button class="btn-text" onclick="showImportMenu()">⋮ Options</button>
+      </div>
+      <div class="positions" id="positions-list"></div>
     </div>
 
-    <div class="positions" id="positions-list"></div>
+    <!-- Chart 6M -->
+    <div>
+      <div class="section-header">
+        <div class="section-label">Évolution 6 mois</div>
+        <button class="btn-text" id="btn-chart" onclick="toggleChart()">Afficher</button>
+      </div>
+      <div class="chart-wrapper" id="chart-section" style="display:none">
+        <div class="chart-loading" id="chart-loading">Chargement des données historiques…</div>
+        <div class="chart-canvas-wrap" id="chart-canvas-wrap" style="display:none">
+          <canvas id="portfolio-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div>
+      <div class="section-header">
+        <div class="section-label">Alertes prix</div>
+        <button class="btn-text" onclick="toggleAlertForm()">+ Ajouter</button>
+      </div>
+
+      <!-- Add alert form -->
+      <div class="alert-form" id="alert-form" style="display:none">
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-label">Titre</div>
+            <select class="form-select" id="alert-symbol"></select>
+          </div>
+          <div class="form-field">
+            <div class="form-label">Direction</div>
+            <select class="form-select" id="alert-direction">
+              <option value="above">▲ Au-dessus</option>
+              <option value="below">▼ En-dessous</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <div class="form-label">Prix cible ($)</div>
+          <input class="form-input" type="number" id="alert-price" placeholder="ex: 300.00" step="0.01" min="0">
+        </div>
+        <button class="btn-add-alert" onclick="addAlert()">Créer l'alerte</button>
+      </div>
+
+      <div class="alerts-list" id="alerts-list" style="margin-top: 8px"></div>
+    </div>
   </main>
 </div>
 
@@ -428,75 +262,56 @@
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const POLL_INTERVAL = 60;
 const STORAGE_KEY   = 'portfolio_holdings_v1';
+const ALERTS_KEY    = 'portfolio_alerts_v1';
 const PUSH_DISMISSED_KEY = 'push_banner_dismissed';
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let holdings = [];
 let quotes   = {};
+let alerts   = [];
 let countdown = POLL_INTERVAL;
-let pollTimer = null;
-let countdownTimer = null;
+let pollTimer = null, countdownTimer = null;
 let pushEnabled = false;
+let chartLoaded = false;
+let chartInstance = null;
 
-// ── CSV PARSING ────────────────────────────────────────────────────────────
+// ── CSV ───────────────────────────────────────────────────────────────────
 function parseCSVRow(line) {
   const result = []; let cur = ''; let inQ = false;
   for (const c of line) {
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += c; }
+    if (c === '"') { inQ = !inQ; } else if (c === ',' && !inQ) { result.push(cur); cur = ''; } else { cur += c; }
   }
-  result.push(cur);
-  return result;
+  return [...result, cur];
 }
-
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
   const headers = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
-
-  const col = (...names) => {
-    for (const n of names) {
-      const i = headers.findIndex(h => h.includes(n));
-      if (i >= 0) return i;
-    }
-    return -1;
-  };
-
-  const iSym  = col('symbol', 'ticker');
-  const iQty  = col('quantity', 'shares', 'qty');
-  const iCost = col('purchase price', 'avg cost', 'cost basis', 'average cost');
-
+  const col = (...names) => { for (const n of names) { const i = headers.findIndex(h => h.includes(n)); if (i >= 0) return i; } return -1; };
+  const iSym = col('symbol','ticker'), iQty = col('quantity','shares','qty'), iCost = col('purchase price','avg cost','cost basis','average cost');
   if (iSym < 0) return null;
-
   return lines.slice(1).flatMap(line => {
     const row = parseCSVRow(line);
-    const sym = (row[iSym] || '').trim().toUpperCase();
+    const sym = (row[iSym]||'').trim().toUpperCase();
     if (!sym || sym === 'SYMBOL') return [];
-    const qty = iQty >= 0 ? parseFloat((row[iQty] || '').replace(/,/g, '')) : 0;
-    const cost = iCost >= 0 ? parseFloat((row[iCost] || '').replace(/[,$]/g, '')) : 0;
+    const qty = iQty >= 0 ? parseFloat((row[iQty]||'').replace(/,/g,'')) : 0;
+    const cost = iCost >= 0 ? parseFloat((row[iCost]||'').replace(/[,$]/g,'')) : 0;
     if (!sym || isNaN(qty) || qty <= 0) return [];
     return [{ symbol: sym, qty, avgCost: isNaN(cost) ? 0 : cost }];
   });
 }
 
-// ── FILE IMPORT ────────────────────────────────────────────────────────────
 document.getElementById('csv-input').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const text = await file.text();
-  const parsed = parseCSV(text);
-  if (!parsed || parsed.length === 0) {
-    alert('Impossible de lire ce CSV. Vérifie le format Yahoo Finance.');
-    return;
-  }
+  const file = e.target.files[0]; if (!file) return;
+  const parsed = parseCSV(await file.text());
+  if (!parsed || !parsed.length) { alert('Format CSV non reconnu.'); return; }
   holdings = parsed;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
   startPortfolio();
 });
 
 // ── QUOTES ────────────────────────────────────────────────────────────────
-async function fetchQuotes() {
+async function fetchQuotes(silent = false) {
   if (!holdings.length) return;
   const dot = document.getElementById('status-dot');
   const symbols = holdings.map(h => h.symbol).join(',');
@@ -505,91 +320,55 @@ async function fetchQuotes() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     (data?.quoteResponse?.result ?? []).forEach(q => {
-      quotes[q.symbol] = {
-        price:     q.regularMarketPrice,
-        change:    q.regularMarketChange,
-        changePct: q.regularMarketChangePercent,
-        prevClose: q.regularMarketPreviousClose,
-        name:      q.shortName || q.symbol,
-        currency:  q.currency || 'USD',
-      };
+      quotes[q.symbol] = { price: q.regularMarketPrice, change: q.regularMarketChange, changePct: q.regularMarketChangePercent, prevClose: q.regularMarketPreviousClose };
     });
     dot.className = 'status-dot live';
     renderPortfolio();
-    updateLastUpdated();
+    checkLocalAlerts();
+    if (!silent) updateLastUpdated();
     countdown = POLL_INTERVAL;
-  } catch (err) {
+  } catch {
     dot.className = 'status-dot error';
-    console.error('Quote fetch error:', err);
   }
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────
-const fmtNum = (n, d = 2) =>
-  isNaN(n) || n == null ? '—' : n.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
-
-const fmtCur = (n, cur = 'USD') =>
-  isNaN(n) || n == null ? '—' : n.toLocaleString('fr-FR', { style: 'currency', currency: cur, maximumFractionDigits: 2 });
-
+// ── RENDER ───────────────────────────────────────────────────────────────
+const fmtNum = (n, d=2) => isNaN(n)||n==null ? '—' : n.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtCur = (n, cur='USD') => isNaN(n)||n==null ? '—' : n.toLocaleString('fr-FR',{style:'currency',currency:cur,maximumFractionDigits:2});
 const sign = n => n >= 0 ? '+' : '';
 const cls  = n => n > 0 ? 'pos' : n < 0 ? 'neg' : 'neu';
 
 function renderPortfolio() {
   let totalValue = 0, totalCost = 0, totalDay = 0;
-
   const rows = holdings.map(h => {
-    const q        = quotes[h.symbol];
-    const price    = q?.price ?? 0;
-    const value    = price * h.qty;
-    const cost     = (h.avgCost || 0) * h.qty;
-    const pnl      = cost > 0 ? value - cost : null;
-    const pnlPct   = cost > 0 ? (pnl / cost) * 100 : null;
-    const dayChg   = (q?.change ?? 0) * h.qty;
+    const q = quotes[h.symbol], price = q?.price ?? 0, value = price * h.qty, cost = (h.avgCost||0) * h.qty;
+    const pnl = cost > 0 ? value - cost : null, pnlPct = cost > 0 ? (pnl/cost)*100 : null;
+    const dayChg = (q?.change??0) * h.qty;
     totalValue += value; totalCost += cost; totalDay += dayChg;
     return { h, q, price, value, cost, pnl, pnlPct, dayChg };
-  }).sort((a, b) => b.value - a.value);
+  }).sort((a,b) => b.value - a.value);
 
-  const totalPnl    = totalCost > 0 ? totalValue - totalCost : null;
-  const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : null;
+  const totalPnl = totalCost > 0 ? totalValue - totalCost : null;
+  const totalPnlPct = totalCost > 0 ? (totalPnl/totalCost)*100 : null;
+  document.getElementById('total-value').textContent = totalValue > 0 ? fmtCur(totalValue) : '—';
 
-  // Header value
-  document.getElementById('total-value').textContent =
-    totalValue > 0 ? fmtCur(totalValue) : '—';
+  const pnlEl = document.getElementById('total-pnl'); pnlEl.innerHTML = '';
+  if (totalPnl !== null) pnlEl.innerHTML += `<span class="pnl-badge ${cls(totalPnl)}">${sign(totalPnl)}${fmtCur(totalPnl)} (${sign(totalPnlPct)}${fmtNum(totalPnlPct)}%)</span><span class="pnl-label">total</span>`;
+  if (totalDay !== 0) pnlEl.innerHTML += `<span class="pnl-badge ${cls(totalDay)}">${sign(totalDay)}${fmtCur(totalDay)}</span><span class="pnl-label">auj.</span>`;
 
-  // Header badges
-  const pnlEl = document.getElementById('total-pnl');
-  pnlEl.innerHTML = '';
-
-  if (totalPnl !== null) {
-    pnlEl.innerHTML += `<span class="pnl-badge ${cls(totalPnl)}">${sign(totalPnl)}${fmtCur(totalPnl)} (${sign(totalPnlPct)}${fmtNum(totalPnlPct)}%)</span><span class="pnl-label">total</span>`;
-  }
-  if (totalDay !== 0) {
-    pnlEl.innerHTML += `<span class="pnl-badge ${cls(totalDay)}">${sign(totalDay)}${fmtCur(totalDay)}</span><span class="pnl-label">auj.</span>`;
-  }
-
-  // Positions
-  const list = document.getElementById('positions-list');
-  list.innerHTML = '';
-
+  const list = document.getElementById('positions-list'); list.innerHTML = '';
   rows.forEach(({ h, q, price, value, pnl, pnlPct, dayChg }) => {
-    const hasCost  = h.avgCost > 0 && pnl !== null;
-    const pnlStr   = hasCost
-      ? `${sign(pnl)}${fmtCur(pnl)} (${sign(pnlPct)}${fmtNum(pnlPct)}%)`
-      : `${sign(dayChg)}${fmtCur(dayChg)} auj.`;
-    const pnlCls   = hasCost ? cls(pnl) : cls(dayChg);
-    const qtyStr   = fmtNum(h.qty, h.qty % 1 === 0 ? 0 : 4);
-    const costStr  = h.avgCost > 0 ? ` · ${fmtCur(h.avgCost)} moy.` : '';
-
-    const row = document.createElement('div');
-    row.className = 'position-row';
+    const hasCost = h.avgCost > 0 && pnl !== null;
+    const pnlStr = hasCost ? `${sign(pnl)}${fmtCur(pnl)} (${sign(pnlPct)}${fmtNum(pnlPct)}%)` : `${sign(dayChg)}${fmtCur(dayChg)} auj.`;
+    const row = document.createElement('div'); row.className = 'position-row';
     row.innerHTML = `
       <div class="pos-left">
         <div class="pos-symbol">${h.symbol}</div>
-        <div class="pos-detail">${qtyStr} action${h.qty > 1 ? 's' : ''}${costStr}</div>
+        <div class="pos-detail">${fmtNum(h.qty, h.qty%1===0?0:4)} action${h.qty>1?'s':''}${h.avgCost>0?' · '+fmtCur(h.avgCost)+' moy.':''}</div>
       </div>
       <div class="pos-right">
-        <div class="pos-value">${price > 0 ? fmtCur(value) : '—'}</div>
-        <div class="pos-pnl ${pnlCls}">${price > 0 ? pnlStr : 'chargement…'}</div>
+        <div class="pos-value">${price>0?fmtCur(value):'—'}</div>
+        <div class="pos-pnl ${hasCost?cls(pnl):cls(dayChg)}">${price>0?pnlStr:'chargement…'}</div>
       </div>`;
     list.appendChild(row);
   });
@@ -597,10 +376,19 @@ function renderPortfolio() {
 
 function updateLastUpdated() {
   document.getElementById('last-updated').textContent =
-    `Mis à jour ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    `Mis à jour ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
 }
 
-// ── COUNTDOWN ─────────────────────────────────────────────────────────────
+// ── MANUAL REFRESH ────────────────────────────────────────────────────────
+async function manualRefresh() {
+  const btn = document.getElementById('btn-refresh');
+  btn.classList.add('spinning');
+  await fetchQuotes();
+  btn.classList.remove('spinning');
+  updateLastUpdated();
+}
+
+// ── COUNTDOWN ────────────────────────────────────────────────────────────
 function startCountdown() {
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = setInterval(() => {
@@ -614,151 +402,304 @@ function startCountdown() {
 function startPolling() {
   fetchQuotes();
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => { countdown = POLL_INTERVAL; fetchQuotes(); }, POLL_INTERVAL * 1000);
+  pollTimer = setInterval(() => { countdown = POLL_INTERVAL; fetchQuotes(true); }, POLL_INTERVAL * 1000);
+}
+
+// ── CHART 6M ──────────────────────────────────────────────────────────────
+let chartVisible = false;
+
+async function toggleChart() {
+  const section = document.getElementById('chart-section');
+  const btn = document.getElementById('btn-chart');
+  chartVisible = !chartVisible;
+  section.style.display = chartVisible ? 'block' : 'none';
+  btn.textContent = chartVisible ? 'Masquer' : 'Afficher';
+  if (chartVisible && !chartLoaded) loadChart();
+}
+
+async function loadChart() {
+  const loading = document.getElementById('chart-loading');
+  const wrap    = document.getElementById('chart-canvas-wrap');
+  loading.style.display = 'block'; wrap.style.display = 'none';
+
+  try {
+    const symbols = holdings.map(h => h.symbol).join(',');
+    const res = await fetch(`/api/history?symbols=${encodeURIComponent(symbols)}`);
+    const history = await res.json();
+
+    // Find common dates
+    const allDates = new Set();
+    Object.values(history).forEach(arr => arr.forEach(d => allDates.add(d.date)));
+    const dates = [...allDates].sort();
+
+    // Compute portfolio value per date
+    const values = dates.map(date => {
+      let total = 0;
+      holdings.forEach(h => {
+        const arr = history[h.symbol];
+        if (!arr) return;
+        const entry = arr.find(d => d.date === date);
+        if (entry) total += entry.close * h.qty;
+      });
+      return total > 0 ? total : null;
+    });
+
+    // Fill nulls with previous value
+    for (let i = 1; i < values.length; i++) {
+      if (values[i] === null && values[i-1] !== null) values[i] = values[i-1];
+    }
+
+    loading.style.display = 'none'; wrap.style.display = 'block';
+    chartLoaded = true;
+    renderChart(dates, values);
+  } catch (e) {
+    loading.textContent = 'Erreur de chargement. Réessaie.';
+    console.error(e);
+  }
+}
+
+function renderChart(labels, values) {
+  if (chartInstance) chartInstance.destroy();
+  const ctx = document.getElementById('portfolio-chart').getContext('2d');
+  const first = values.find(v => v != null), last = values[values.length-1];
+  const color = last >= first ? '#3ddc84' : '#ff5f5f';
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: color,
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: ctx2 => {
+          const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, 200);
+          g.addColorStop(0, color + '22');
+          g.addColorStop(1, color + '00');
+          return g;
+        },
+        tension: 0.3,
+        spanGaps: true,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0e1521',
+          borderColor: '#1a2535',
+          borderWidth: 1,
+          titleColor: '#4a5a72',
+          bodyColor: '#e8edf5',
+          bodyFont: { family: 'JetBrains Mono', size: 13 },
+          callbacks: {
+            label: ctx => ' ' + (ctx.parsed.y ?? 0).toLocaleString('fr-FR', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#1a2535' },
+          ticks: {
+            color: '#4a5a72', font: { family: 'JetBrains Mono', size: 10 },
+            maxTicksLimit: 6,
+            callback: (_, i, ticks) => {
+              const d = new Date(labels[Math.round(i * (labels.length-1) / (ticks.length-1))]);
+              return d.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
+            }
+          }
+        },
+        y: {
+          grid: { color: '#1a2535' },
+          ticks: {
+            color: '#4a5a72', font: { family: 'JetBrains Mono', size: 10 },
+            callback: v => v >= 1000 ? `${(v/1000).toFixed(0)}k$` : `${v}$`
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── ALERTS ────────────────────────────────────────────────────────────────
+function loadAlerts() {
+  try { alerts = JSON.parse(localStorage.getItem(ALERTS_KEY)) || []; } catch { alerts = []; }
+}
+function saveAlerts() { localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts)); }
+
+function renderAlerts() {
+  const list = document.getElementById('alerts-list');
+  list.innerHTML = '';
+  if (!alerts.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucune alerte configurée.</div>';
+    return;
+  }
+  alerts.forEach((a, i) => {
+    const dir = a.direction === 'above' ? '▲' : '▼';
+    const row = document.createElement('div');
+    row.className = `alert-row${a.triggered ? ' triggered' : ''}`;
+    row.innerHTML = `
+      <div class="alert-info">
+        <div class="alert-title">${a.symbol} ${dir} ${fmtCur(a.targetPrice)}</div>
+        <div class="alert-sub">${a.triggered ? '✓ Déclenchée' : 'En attente'}</div>
+      </div>
+      <button class="btn-del" onclick="deleteAlert(${i})">×</button>`;
+    list.appendChild(row);
+  });
+}
+
+function toggleAlertForm() {
+  const form = document.getElementById('alert-form');
+  const visible = form.style.display !== 'none';
+  form.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    // Populate symbol dropdown from holdings
+    const sel = document.getElementById('alert-symbol');
+    sel.innerHTML = holdings.map(h => `<option value="${h.symbol}">${h.symbol}</option>`).join('');
+    // Pre-fill current price
+    const firstSym = holdings[0]?.symbol;
+    if (firstSym && quotes[firstSym]) {
+      document.getElementById('alert-price').value = quotes[firstSym].price.toFixed(2);
+    }
+  }
+}
+
+function addAlert() {
+  const symbol = document.getElementById('alert-symbol').value;
+  const direction = document.getElementById('alert-direction').value;
+  const targetPrice = parseFloat(document.getElementById('alert-price').value);
+  if (!symbol || isNaN(targetPrice) || targetPrice <= 0) { alert('Remplis tous les champs.'); return; }
+  alerts.push({ id: crypto.randomUUID(), symbol, direction, targetPrice, triggered: false, createdAt: new Date().toISOString() });
+  saveAlerts();
+  renderAlerts();
+  syncAlertsToServer();
+  document.getElementById('alert-form').style.display = 'none';
+  showToast(`🎯 Alerte ${symbol} créée`);
+}
+
+function deleteAlert(i) {
+  alerts.splice(i, 1);
+  saveAlerts(); renderAlerts(); syncAlertsToServer();
+}
+
+// Client-side alert check (in case push is off)
+function checkLocalAlerts() {
+  for (const alert of alerts) {
+    if (alert.triggered) continue;
+    const q = quotes[alert.symbol];
+    if (!q) continue;
+    const hit = alert.direction === 'above' ? q.price >= alert.targetPrice : q.price <= alert.targetPrice;
+    if (!hit) continue;
+    alert.triggered = true;
+    saveAlerts(); renderAlerts();
+    const dir = alert.direction === 'above' ? '▲' : '▼';
+    showToast(`🎯 ${alert.symbol} ${dir} ${fmtCur(alert.targetPrice)} — Prix : ${fmtCur(q.price)}`);
+  }
+}
+
+async function syncAlertsToServer() {
+  if (!pushEnabled) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+    await fetch('/api/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: sub.endpoint, alerts }),
+    });
+  } catch {}
 }
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+function urlBase64ToUint8Array(b64) {
+  const padding = '='.repeat((4 - b64.length % 4) % 4);
+  const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from([...atob(base64)].map(c => c.charCodeAt(0)));
 }
 
 async function subscribeToPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    alert('Les notifications push ne sont pas supportées sur ce navigateur.\n\niOS : installe l\'app via Safari → "Sur l\'écran d\'accueil"');
-    return false;
+    alert('Push non supporté.\niOS : installe via Safari → "Sur l\'écran d\'accueil"'); return false;
   }
-
-  const perm = await Notification.requestPermission();
-  if (perm !== 'granted') return false;
-
+  if (await Notification.requestPermission() !== 'granted') return false;
   const reg = await navigator.serviceWorker.ready;
   const { key } = await (await fetch('/api/vapid-public-key')).json();
-
-  const subscription = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(key),
-  });
-
+  const subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) });
   await fetch('/api/subscribe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subscription, holdings }),
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subscription, holdings, alerts }),
   });
-
   return true;
 }
 
 async function unsubscribeFromPush() {
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
-  if (sub) {
-    await fetch('/api/unsubscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint: sub.endpoint }),
-    });
-    await sub.unsubscribe();
-  }
+  if (sub) { await fetch('/api/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }); await sub.unsubscribe(); }
 }
 
 async function enablePush() {
-  const ok = await subscribeToPush();
-  if (ok) {
-    pushEnabled = true;
-    updateBellUI();
-    dismissPushBanner();
-    showToast('🔔 Notifs activées — 14h30 NY chaque jour ouvré');
-  }
+  if (await subscribeToPush()) { pushEnabled = true; updateBellUI(); dismissPushBanner(); showToast('🔔 Push activé · horaire NYSE + alertes'); }
 }
 
 async function togglePush() {
-  if (pushEnabled) {
-    await unsubscribeFromPush();
-    pushEnabled = false;
-    updateBellUI();
-    showToast('Notifications désactivées');
-  } else {
-    await enablePush();
-  }
+  if (pushEnabled) { await unsubscribeFromPush(); pushEnabled = false; updateBellUI(); showToast('Notifications désactivées'); }
+  else { await enablePush(); }
 }
 
-function updateBellUI() {
-  document.getElementById('btn-bell').classList.toggle('active', pushEnabled);
-}
+function updateBellUI() { document.getElementById('btn-bell').classList.toggle('active', pushEnabled); }
 
 async function checkPushStatus() {
   if (!('PushManager' in window)) return;
   const reg = await navigator.serviceWorker.ready;
-  const sub = await reg.pushManager.getSubscription();
-  pushEnabled = !!sub;
+  pushEnabled = !!(await reg.pushManager.getSubscription());
   updateBellUI();
-
-  // Show banner once if not dismissed and not already subscribed
-  if (!pushEnabled && !localStorage.getItem(PUSH_DISMISSED_KEY)) {
-    setTimeout(() => {
-      document.getElementById('push-banner').style.display = 'flex';
-    }, 2000);
-  }
+  if (!pushEnabled && !localStorage.getItem(PUSH_DISMISSED_KEY))
+    setTimeout(() => { document.getElementById('push-banner').style.display = 'flex'; }, 2000);
 }
 
-function dismissPushBanner() {
-  document.getElementById('push-banner').style.display = 'none';
-  localStorage.setItem(PUSH_DISMISSED_KEY, '1');
-}
+function dismissPushBanner() { document.getElementById('push-banner').style.display = 'none'; localStorage.setItem(PUSH_DISMISSED_KEY, '1'); }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────
 function showToast(msg) {
-  const t = Object.assign(document.createElement('div'), {
-    textContent: msg,
-    style: `position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#1a2535;color:#e8edf5;padding:10px 18px;border-radius:20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;z-index:999;pointer-events:none;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,0.4);`,
-  });
+  const t = Object.assign(document.createElement('div'), { textContent: msg, className: 'toast' });
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2800);
+  setTimeout(() => t.remove(), 3000);
 }
 
-// ── OPTIONS MENU ──────────────────────────────────────────────────────────
+// ── OPTIONS ───────────────────────────────────────────────────────────────
 function showImportMenu() {
-  const choice = confirm('Réinitialiser et importer un nouveau CSV ?');
-  if (choice) resetPortfolio();
+  if (confirm('Réinitialiser et importer un nouveau CSV ?')) resetPortfolio();
 }
-
 function resetPortfolio() {
-  clearInterval(pollTimer);
-  clearInterval(countdownTimer);
-  holdings = []; quotes = {};
-  localStorage.removeItem(STORAGE_KEY);
+  clearInterval(pollTimer); clearInterval(countdownTimer);
+  holdings = []; quotes = []; alerts = [];
+  localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(ALERTS_KEY);
   document.getElementById('portfolio-screen').style.display = 'none';
   document.getElementById('import-screen').style.display = 'flex';
   document.getElementById('csv-input').value = '';
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; chartLoaded = false; }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 function startPortfolio() {
   document.getElementById('import-screen').style.display = 'none';
   document.getElementById('portfolio-screen').style.display = 'block';
-  startPolling();
-  startCountdown();
-  checkPushStatus();
+  loadAlerts(); renderAlerts();
+  startPolling(); startCountdown(); checkPushStatus();
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  }
-
-  // Restore holdings from localStorage
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      holdings = JSON.parse(saved);
-      if (holdings.length) { startPortfolio(); return; }
-    }
+    if (saved) { holdings = JSON.parse(saved); if (holdings.length) { startPortfolio(); return; } }
   } catch {}
-
   document.getElementById('import-screen').style.display = 'flex';
 });
 </script>
